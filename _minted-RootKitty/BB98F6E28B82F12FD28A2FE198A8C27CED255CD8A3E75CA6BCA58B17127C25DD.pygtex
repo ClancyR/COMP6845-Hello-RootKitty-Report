@@ -1,0 +1,24 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// Imported from AsmHooks.h}
+\PYG{c+cp}{\PYGZsh{}define FORCE\PYGZus{}INLINE \PYGZus{}\PYGZus{}attribute\PYGZus{}\PYGZus{}((always\PYGZus{}inline)) inline}
+
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Set WP bit in cr0 register to 0 to disable write protection on the CPU. (Allowing us}
+\PYG{c+cm}{ * to overwrite function prologue without causing an oops.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Note: It is imperative we take care to avoid race conditions in SMP systems,}
+\PYG{c+cm}{ * hence the locking!}
+\PYG{c+cm}{ */}
+\PYG{n}{FORCE\PYGZus{}INLINE} \PYG{k+kt}{void} \PYG{n+nf}{disable\PYGZus{}wp}\PYG{p}{(}\PYG{k+kt}{void}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{n}{preempt\PYGZus{}disable}\PYG{p}{();}
+    \PYG{n}{write\PYGZus{}cr0}\PYG{p}{(}\PYG{n}{read\PYGZus{}cr0}\PYG{p}{()} \PYG{o}{\PYGZam{}} \PYG{p}{(}\PYG{o}{\PYGZti{}} \PYG{l+m+mh}{0x10000}\PYG{p}{));}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Restores WP bit in cr0 register to restore write protection after we\PYGZsq{}ve changed it.}
+\PYG{c+cm}{ */}
+\PYG{n}{FORCE\PYGZus{}INLINE} \PYG{k+kt}{void} \PYG{n+nf}{enable\PYGZus{}wp}\PYG{p}{(}\PYG{k+kt}{void}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{n}{preempt\PYGZus{}enable}\PYG{p}{();}
+    \PYG{n}{write\PYGZus{}cr0}\PYG{p}{(}\PYG{n}{read\PYGZus{}cr0}\PYG{p}{()} \PYG{o}{|} \PYG{l+m+mh}{0x10000}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

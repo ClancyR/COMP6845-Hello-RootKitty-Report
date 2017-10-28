@@ -1,0 +1,3 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{iterate}\PYG{p}{(}\PYG{k}{struct} \PYG{n}{file} \PYG{o}{*}\PYG{n}{file}\PYG{p}{,} \PYG{k}{struct} \PYG{n}{dir\PYGZus{}context} \PYG{o}{*}\PYG{n}{context}\PYG{p}{)}
+\end{Verbatim}

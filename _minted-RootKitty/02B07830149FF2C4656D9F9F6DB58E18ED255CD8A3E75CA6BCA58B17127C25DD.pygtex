@@ -1,0 +1,20 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Patches the prologue bytes of the original function to call another function.}
+\PYG{c+cm}{ * This function should not be called directly.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @param h A pointer to the asm\PYGZus{}hook object to perform patching on.}
+\PYG{c+cm}{ */}
+\PYG{k+kt}{void} \PYG{n+nf}{\PYGZus{}asm\PYGZus{}hook\PYGZus{}patch}\PYG{p}{(}\PYG{k}{struct} \PYG{n}{asm\PYGZus{}hook} \PYG{o}{*}\PYG{n}{h}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+c1}{// Disable write protection as otherwise we\PYGZsq{}ll generate an oops.}
+    \PYG{n}{disable\PYGZus{}wp}\PYG{p}{();}
+
+    \PYG{c+c1}{// Overwrite prologue bytes to call our function.}
+    \PYG{n}{memcpy}\PYG{p}{(}\PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{original\PYGZus{}function}\PYG{p}{,} \PYG{n}{ASM\PYGZus{}HOOK\PYGZus{}CODE}\PYG{p}{,} \PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{ASM\PYGZus{}HOOK\PYGZus{}CODE}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{);}
+    \PYG{o}{*}\PYG{p}{(}\PYG{k+kt}{void} \PYG{o}{**}\PYG{p}{)}\PYG{o}{\PYGZam{}}\PYG{p}{((}\PYG{k+kt}{char} \PYG{o}{*}\PYG{p}{)}\PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{original\PYGZus{}function}\PYG{p}{)[}\PYG{n}{ASM\PYGZus{}HOOK\PYGZus{}CODE\PYGZus{}OFFSET}\PYG{p}{]} \PYG{o}{=} \PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{modified\PYGZus{}function}\PYG{p}{;}
+
+    \PYG{c+c1}{// Restore write protection. Keep Australia beautiful.}
+    \PYG{n}{enable\PYGZus{}wp}\PYG{p}{();}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

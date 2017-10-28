@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Struct used to store information required to patch and unpatch our hooks.}
+\PYG{c+cm}{ * This includes:}
+\PYG{c+cm}{ *     \PYGZhy{} Pointer to the original function. (Function before being patched).}
+\PYG{c+cm}{ *     \PYGZhy{} Pointer to patched function.      (Function after being patched).}
+\PYG{c+cm}{ *     \PYGZhy{} ASM code for original function.   (So we can fix it later).}
+\PYG{c+cm}{ *     \PYGZhy{} Pointer to linked list holding our hooks.}
+\PYG{c+cm}{ */}
+\PYG{k}{struct} \PYG{n}{asm\PYGZus{}hook} \PYG{p}{\PYGZob{}}
+    \PYG{k+kt}{void} \PYG{o}{*}\PYG{n}{original\PYGZus{}function}\PYG{p}{;}
+    \PYG{k+kt}{void} \PYG{o}{*}\PYG{n}{modified\PYGZus{}function}\PYG{p}{;}
+    \PYG{k+kt}{char} \PYG{n}{original\PYGZus{}asm}\PYG{p}{[}\PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{ASM\PYGZus{}HOOK\PYGZus{}CODE}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{];}
+    \PYG{k}{struct} \PYG{n}{list\PYGZus{}head} \PYG{n}{list}\PYG{p}{;}
+\PYG{p}{\PYGZcb{};}
+\end{Verbatim}

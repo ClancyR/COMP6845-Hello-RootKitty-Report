@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// Hide from lsmod by unlinking our module from /proc/modules.}
+\PYG{c+c1}{// (next\PYGZhy{}\PYGZgt{}prev = prev \PYGZam{} prev\PYGZhy{}\PYGZgt{}next = next)}
+\PYG{n}{list\PYGZus{}del\PYGZus{}init}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{\PYGZus{}\PYGZus{}this\PYGZus{}module}\PYG{p}{.}\PYG{n}{list}\PYG{p}{);}
+\end{Verbatim}

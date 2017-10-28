@@ -1,0 +1,18 @@
+\BOOKMARK [1][-]{section.1}{Adopting a RootKitty \(Introduction\)}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Why a Rootkit?}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Isn't This Supposed to be a Report?}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{Housetraining Your RootKitty \(Insertion\)}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{Insertion Vector - LKMs}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Covering Your Tracks - Hiding the Kernel Module}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Teaching Your RootKitty New Tricks \(Exploitation\)}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{Hooking the Syscall Table}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{Inline Function Hooking}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{Identifying the Spiciest Functions to Hijack}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.4}{Hiding Files}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.5}{Hiding Processes}{section.3}% 12
+\BOOKMARK [1][-]{section.4}{Communicating With Your RootKitty \(Command \046 Control\)}{}% 13
+\BOOKMARK [2][-]{subsection.4.1}{Establishing Channel - Hooking INode Lookup}{section.4}% 14
+\BOOKMARK [2][-]{subsection.4.2}{Installing Your CatFlap}{section.4}% 15
+\BOOKMARK [2][-]{subsection.4.3}{Pocs or GTFO}{section.4}% 16
+\BOOKMARK [1][-]{section.5}{Greetz}{}% 17
+\BOOKMARK [2][-]{subsection.5.1}{Bonus}{section.5}% 18

@@ -1,0 +1,18 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * Given a filepath, returns a pointer to its file\PYGZus{}operations struct.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @param path The filepath to retrieve the f\PYGZus{}op struct pointer from.}
+\PYG{c+cm}{ * @return A pointer to an f\PYGZus{}op struct for path if it exists, NULL otherwise.}
+\PYG{c+cm}{ */}
+\PYG{k}{struct} \PYG{n}{file\PYGZus{}operations} \PYG{o}{*}\PYG{n+nf}{get\PYGZus{}fop}\PYG{p}{(}\PYG{k}{const} \PYG{k+kt}{char} \PYG{o}{*}\PYG{n}{path}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{k}{struct} \PYG{n}{file} \PYG{o}{*}\PYG{n}{f}\PYG{p}{;}
+
+    \PYG{k}{if} \PYG{p}{((}\PYG{n}{f} \PYG{o}{=} \PYG{n}{filp\PYGZus{}open}\PYG{p}{(}\PYG{n}{path}\PYG{p}{,} \PYG{n}{O\PYGZus{}RDONLY}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{))} \PYG{o}{==} \PYG{n+nb}{NULL}\PYG{p}{)} \PYG{k}{return} \PYG{n+nb}{NULL}\PYG{p}{;}
+
+    \PYG{k}{struct} \PYG{n}{file\PYGZus{}operations} \PYG{o}{*}\PYG{n}{ret} \PYG{o}{=} \PYG{p}{(}\PYG{k}{struct} \PYG{n}{file\PYGZus{}operations} \PYG{o}{*}\PYG{p}{)} \PYG{n}{f}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{f\PYGZus{}op}\PYG{p}{;}
+    \PYG{n}{filp\PYGZus{}close}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{);}
+
+    \PYG{k}{return} \PYG{n}{ret}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

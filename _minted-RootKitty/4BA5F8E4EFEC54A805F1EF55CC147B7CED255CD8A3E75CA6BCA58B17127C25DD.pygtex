@@ -1,0 +1,4 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// Remove our module information from /sys/module/ by unlinking entry.}
+\PYG{n}{kobject\PYGZus{}del}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{THIS\PYGZus{}MODULE}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{mkobj}\PYG{p}{.}\PYG{n}{kobj}\PYG{p}{);}
+\end{Verbatim}
